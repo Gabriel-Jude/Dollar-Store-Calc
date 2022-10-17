@@ -1,0 +1,211 @@
+#!/bin/bash
+#
+# Written by Gabriel Jude 501097856. CCPS 393 Section 310 Professor: Hiraki
+#
+# Comprehensive section:
+
+# Two Programming Concepts which this assigment helped me learn.
+
+# 1. How to use functions in Unix Scripts and the power of them.
+# 2. How to use case statements and "patterns".
+
+# I learned these concepts through this assignment for my code's optimization and greater function.
+# In version one of my calculator, I wanted to get as close as possible to a working model.
+# However, that worked only in 70 % of cases and was extremely inefficient with code.
+# Lots of blocks of code were repeated, and if else, statements cluttered the screen.
+# I will expand on those in the second question. However, they were solved by the two things I learned.
+
+# Functions and case statements.
+
+# Firstly, instead of repeating actions for each command from the user,
+# I realized I could just write the code once, put it in a function, and call it every time I need to use it.
+# That helped reduce my repetition of code.
+
+# Secondly, instead of using if-else statements, case statements helped cleaned up my general work flow
+# and also helped me with catching invalid inputs as , I used the  builtin digits pattern available in case statements.
+# So whenever someone entered something other than digits or commands for the operand, it catches the error.
+
+# Two difficulties or problems I encountered in completing the assignment.
+
+# 1. How to repeat actions every time an invalid input was entered
+# 2. How to repeat actions operator and second operand without repeating operand1 after the first run of the calculator
+
+# Number one was the biggest headache, closely followed by the second one however, both were solved by functions
+# as I mentioned before my version one was purely all one while loop. And I would break every time
+# I need to repeat the loop. That fell short really quickly once I realized for commands like C and
+# invalid input must repeat the loop without losing either memory data or previously entered date.
+
+# Functions solved both cases. I put the whole loop in a function and was able to just call the
+# mainLoop function to restart the loop and other functions could just call themselves in case
+# they need to get input again after an invalid input or function like C
+
+# End of Comprehensive section:
+
+echo Welcome to calculator
+
+# First Run initialization of values
+memory=0
+result=0
+operand1=0
+operand2=0
+operator=''
+
+clear() { #clear result; keep memory
+
+    operand1=0
+    operand2=0
+    operator=''
+    result=0
+
+    echo "  Results cleared"
+}
+
+memoryStore() { #store result in memory
+    echo Memory stored
+    echo " $result -> M"
+    memory=$result
+}
+
+memoryAdd() { #add result to memory
+    echo Memory added
+    echo "$result + $memory = $((result + memory)) -> M"
+    memory=$(($memory + $result))
+
+}
+
+memoryClear() { #clear memory
+    echo Memory cleared
+    echo " 0 -> M"
+    memory=0
+}
+
+exitFunction() { #exit program
+    echo "Thanks for using the calulator"
+    exit 0 #exit program
+}
+
+getFirstOperand() { #get first operand
+    echo Enter operand:
+    read operand1
+
+    case $operand1 in    # case statement for all the cases
+    "X") exitFunction ;; # calling each respective function
+    "C")
+        clear
+        getFirstOperand
+        ;; #function calls itself to get input again
+    "MR")
+        operand1=$memory
+        echo "M -> $memory"
+        ;; #memory recall (Did not use function for this one as more easier and readable without)
+    "MC") memoryClear 
+          getFirstOperand ;;
+    *[0-9]*) ;; #pattern for digits
+    *)
+        echo "Sorry $operand1 is not a valid operand Please re-enter operand"
+        getFirstOperand #function calls itself to get input again
+        ;;
+
+    esac
+}
+
+getOperator() { #get operator
+    echo "  Enter operator:"
+    read operator
+
+    case $operator in # case statement for all the cases
+    "X") exitFunction ;;
+    "C")
+        clear
+        mainLoop #function calls mainLoop to restart the loop and get the first operand again
+        ;;
+    "MC")
+        memoryClear
+        getOperator
+        ;;
+    "M+")
+        memoryAdd
+        getOperator
+        ;;
+    "MS")
+        memoryStore
+        getOperator # function calls itself to get input again for the two above aswell
+        ;;
+    "+") ;;
+    "-") ;;
+    "*") ;;
+    "/") ;; #only valid operators else ↓
+    *)
+        echo "Sorry $operator is not a valid operator Please re-enter operator"
+        getOperator #function calls itself to get input again
+        ;;
+    esac
+}
+
+getSecondOperand() { #get second operand
+    echo Enter operand:
+    read operand2
+
+    # Special case for division by zero
+    # only difference from the first operand function
+
+    if [ "$operator" = "/" ] && [ "$operand2" = "0" ]; then
+        echo "Can't divide by zero.  Please re-enter divisor."
+        getSecondOperand
+    fi
+
+    case $operand2 in
+    "X") exitFunction ;;
+    "C")
+        clear
+        mainLoop
+        ;;
+    "MC") memoryClear 
+          getSecondOperand ;;
+    "MR")
+        operand2=$memory
+        echo "M -> $memory"
+        ;;
+    *[0-9]*) ;;
+    *) echo "Sorry $operand2 is not a valid operand Please re-enter operand" ;;
+
+    esac
+
+}
+
+instructions() { #instructions
+    echo ""
+    echo "  Enter X to exit"
+    echo "  Enter C to clear result, but keep memory"
+    echo "  Enter MC to clear memory"
+    echo "  Enter MS to store result in memory"
+    echo "  Enter M+ to add result to memory"
+    echo "  Enter MR to recall memory"
+    echo "  At the Operand prompt, you can enter: Any digit, MR, MC, Clear (C), Off (X) "
+    echo "  At the Operator prompt, you can enter: +, -, *, /, MC, MS, M+, Clear (C), Off (X) "
+    echo "  At both prompts (treat as operand or operator) you can enter: MC, Clear (C), Off (X)"
+    echo " "
+}
+# Main loop
+
+
+mainLoop() { # inside function incase I need to restart the loop , just call the mainLoop function
+
+    getFirstOperand
+
+    while true; do # in a while true loop to keep asking for operator and operand 
+
+        getOperator
+        getSecondOperand
+
+        result="$(($operand1$operator$operand2))" #calculate result
+        echo "  $operand1 $operator $operand2 = $result" #print result
+        operand1=$result #set operand1 to result for next calculation
+
+    done
+
+}
+
+instructions #print instructions once
+mainLoop #start main loop
+
